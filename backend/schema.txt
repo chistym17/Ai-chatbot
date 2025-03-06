@@ -1,0 +1,92 @@
+Table "public.patients"
+Column   |            Type             | Collation | Nullable |      Default       
+------------+-----------------------------+-----------+----------+--------------------
+ id         | uuid                        |           | not null | uuid_generate_v4()
+ name       | character varying(100)      |           | not null | 
+ age        | integer                     |           | not null | 
+ gender     | character varying(10)       |           | not null | 
+ address    | text                        |           |          | 
+ phone      | character varying(20)       |           |          | 
+ email      | character varying(255)      |           |          | 
+ created_at | timestamp without time zone |           |          | now()
+Indexes:
+    "patients_pkey" PRIMARY KEY, btree (id)
+    "patients_email_key" UNIQUE CONSTRAINT, btree (email)
+    "patients_phone_key" UNIQUE CONSTRAINT, btree (phone)
+Check constraints:
+    "patients_gender_check" CHECK (gender::text = ANY (ARRAY['Male'::character varying, 'Female'::character varying, 'Other'::character varying]::text[]))
+Referenced by:
+    TABLE "appointments" CONSTRAINT "appointments_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    TABLE "medical_records" CONSTRAINT "medical_records_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+
+Table "public.doctors"
+       Column        |          Type          | Collation | Nullable |      Default       
+---------------------+------------------------+-----------+----------+--------------------
+ id                  | uuid                   |           | not null | uuid_generate_v4()
+ hospital_id         | uuid                   |           |          | 
+ name                | character varying(255) |           | not null | 
+ specialization      | character varying(255) |           | not null | 
+ years_of_experience | integer                |           |          | 
+Indexes:
+    "doctors_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "doctors_hospital_id_fkey" FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "appointments" CONSTRAINT "appointments_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+    TABLE "medical_records" CONSTRAINT "medical_records_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+
+Table "public.hospitals"
+      Column      |          Type          | Collation | Nullable |      Default       
+------------------+------------------------+-----------+----------+--------------------
+ id               | uuid                   |           | not null | uuid_generate_v4()
+ name             | character varying(100) |           | not null | 
+ location         | text                   |           |          | 
+ contact          | character varying(20)  |           |          | 
+ established_date | date                   |           |          | 
+Indexes:
+    "hospitals_pkey" PRIMARY KEY, btree (id)
+    "hospitals_contact_key" UNIQUE CONSTRAINT, btree (contact)
+Referenced by:
+    TABLE "doctors" CONSTRAINT "doctors_hospital_id_fkey" FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
+
+Table "public.diseases"
+      Column       |            Type             | Collation | Nullable |      Default       
+-------------------+-----------------------------+-----------+----------+--------------------
+ id                | uuid                        |           | not null | uuid_generate_v4()
+ name              | character varying(100)      |           | not null | 
+ description       | text                        |           |          | 
+ symptoms          | text[]                      |           |          | 
+ common_treatments | text[]                      |           |          | 
+ created_at        | timestamp without time zone |           |          | now()
+Indexes:
+    "diseases_pkey" PRIMARY KEY, btree (id)
+    "diseases_name_key" UNIQUE CONSTRAINT, btree (name)
+
+Table "public.appointments"
+      Column      |            Type             | Collation | Nullable |            Default             
+------------------+-----------------------------+-----------+----------+--------------------------------
+ id               | uuid                        |           | not null | uuid_generate_v4()
+ doctor_id        | uuid                        |           |          | 
+ patient_id       | uuid                        |           |          | 
+ appointment_date | timestamp without time zone |           | not null | 
+ status           | character varying(50)       |           |          | 'scheduled'::character varying
+Indexes:
+    "appointments_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "appointments_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+    "appointments_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+
+Table "public.medical_records"
+   Column    |            Type             | Collation | Nullable |      Default       
+-------------+-----------------------------+-----------+----------+--------------------
+ id          | uuid                        |           | not null | uuid_generate_v4()
+ patient_id  | uuid                        |           |          | 
+ diagnosis   | text                        |           | not null | 
+ medications | text[]                      |           |          | 
+ created_at  | timestamp without time zone |           |          | now()
+ doctor_id   | uuid                        |           |          | 
+Indexes:
+    "medical_records_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "medical_records_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+    "medical_records_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
