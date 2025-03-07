@@ -1,3 +1,10 @@
 fastapi
 uvicorn
 pydantic
+psycopg2
+faker
+transformers 
+datasets 
+torch 
+peft 
+accelerate
