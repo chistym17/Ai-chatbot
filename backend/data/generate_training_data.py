@@ -199,4 +199,4 @@ def generate_training_data(num_samples=500):
     print(f"Generated {num_samples} training samples in training_data.jsonl")
 
 # Generate 500 samples
-generate_training_data(100)
+generate_training_data(5000)
