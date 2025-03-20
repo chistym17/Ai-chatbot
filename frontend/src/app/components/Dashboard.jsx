@@ -83,7 +83,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6 min-h-screen bg-gray-50">
+    <div className="container mx-auto p-6 h-[700px] bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-gray-800 text-center">
           Healthcare Dashboard
