@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 fake = Faker()
 
-# Database connection (replace with your details)
 conn = psycopg2.connect(
     dbname="mydb",
     user="myuser",
@@ -16,19 +15,17 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-# Sample data lists
 cities = ["New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Seattle, WA", "Boston, MA"]
 specializations = ["Cardiology", "Neurology", "Orthopedic Surgery", "General Practice", "Dermatology", "Oncology", "Pediatrics"]
 diseases_list = [
     "Hypertension", "Diabetes", "Asthma", "Bronchitis", "Migraine", "Arthritis", "Lung Cancer", "Breast Cancer",
-    "Depression", "Anxiety"] + [f"Disease {i}" for i in range(1, 91)]  # 100 total
+    "Depression", "Anxiety"] + [f"Disease {i}" for i in range(1, 91)]  
 symptoms_list = ["cough", "fever", "fatigue", "pain", "headache", "nausea", "shortness of breath", "rash"]
 treatments_list = ["Lisinopril", "Metformin", "Insulin", "Albuterol", "Ibuprofen", "Azithromycin", "Chemotherapy", "Surgery"]
 medications_list = treatments_list + ["Atenolol", "Fluticasone", "Sumatriptan", "Paracetamol"]
 
-# 1. Insert Hospitals (50 new)
 cur.execute("SELECT id FROM hospitals")
-hospitals = [row[0] for row in cur.fetchall()]  # Fetch existing IDs
+hospitals = [row[0] for row in cur.fetchall()]  
 for _ in range(50):
     hospital_id = str(uuid.uuid4())
     name = f"{fake.word().capitalize()} Hospital"
@@ -41,9 +38,8 @@ for _ in range(50):
     )
     hospitals.append(hospital_id)
 
-# 2. Insert Doctors (60 new)
 cur.execute("SELECT id FROM doctors")
-doctors = [row[0] for row in cur.fetchall()]  # Fetch existing IDs
+doctors = [row[0] for row in cur.fetchall()]  
 for _ in range(60):
     doctor_id = str(uuid.uuid4())
     hospital_id = choice(hospitals)
@@ -56,10 +52,9 @@ for _ in range(60):
     )
     doctors.append(doctor_id)
 
-# 3. Insert Patients (500 new)
 cur.execute("SELECT id, email FROM patients")
-patients = [row[0] for row in cur.fetchall()]  # Fetch existing IDs
-existing_emails = set(row[1] for row in cur.fetchall() if row[1] is not None)  # Fetch existing emails
+patients = [row[0] for row in cur.fetchall()]  
+existing_emails = set(row[1] for row in cur.fetchall() if row[1] is not None)  
 
 for _ in range(500):
     patient_id = str(uuid.uuid4())
@@ -69,7 +64,6 @@ for _ in range(500):
     address = f"{randint(100, 999)} {fake.street_name()}, {choice(cities)}"
     phone = fake.unique.phone_number()[:12].replace(".", "-")
     
-    # Generate a unique email
     email = f"{name.lower().replace(' ', '.')}@example.com"
     attempt = 1
     while email in existing_emails:
@@ -84,8 +78,7 @@ for _ in range(500):
     )
     patients.append(patient_id)
 
-# 4. Insert Diseases (100 new)
-diseases = {}  # Map name to ID
+diseases = {}  
 for disease_name in diseases_list:
     disease_id = str(uuid.uuid4())
     description = f"{disease_name} condition"
@@ -98,13 +91,12 @@ for disease_name in diseases_list:
     )
     diseases[disease_name] = disease_id
 
-# 5. Insert Medical Records (60 new) - Linked to Diseases
 cur.execute("SELECT patient_id FROM medical_records")
-medical_patients = [row[0] for row in cur.fetchall()]  # Fetch existing patients with records
+medical_patients = [row[0] for row in cur.fetchall()]  
 for _ in range(60):
     record_id = str(uuid.uuid4())
-    patient_id = choice(patients)  # Random patient, some will overlap
-    diagnosis = choice(list(diseases.keys()))  # Links to diseases.name
+    patient_id = choice(patients)  
+    diagnosis = choice(list(diseases.keys()))  
     medications = [choice(medications_list) for _ in range(randint(1, 3))]
     created_at = fake.date_time_between(start_date="-5y", end_date="now")
     doctor_id = choice(doctors)
@@ -114,11 +106,10 @@ for _ in range(60):
     )
     medical_patients.append(patient_id)
 
-# 6. Insert Appointments (60 new) - Linked to Medical Records via Patients
 for _ in range(60):
     appt_id = str(uuid.uuid4())
     doctor_id = choice(doctors)
-    patient_id = choice(medical_patients)  # Only patients with medical records
+    patient_id = choice(medical_patients)  
     appointment_date = fake.date_time_between(start_date="now", end_date="+1y")
     status = choice(["scheduled"] * 8 + ["completed"] * 2 + ["canceled"] * 1)
     cur.execute(
@@ -126,10 +117,8 @@ for _ in range(60):
         (appt_id, doctor_id, patient_id, appointment_date, status)
     )
 
-# Commit the transaction
 conn.commit()
 print("Bulk data inserted successfully with diseases linked to appointments via medical_records!")
 
-# Close the connection
 cur.close()
 conn.close()

@@ -11,7 +11,7 @@ export default function ChatInfo() {
 
   return (
     <div className="relative min-h-[600px]">
-      <div className="max-w-6xl mx-auto p-12 rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl my-12">
+      <div className="max-w-7xl mx-auto p-12 rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl my-12">
         <h2 className="text-4xl font-bold text-gray-800 mb-8 text-center">
           AI-Powered Healthcare Assistant
         </h2>

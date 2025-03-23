@@ -3,14 +3,12 @@ import random
 from datetime import datetime, timedelta
 import re
 
-# Sample dynamic data
 names = ["Alice Smith", "John Doe", "Michael Brown", "Sarah Johnson", "David Wilson", "Emma Davis", "James Taylor", "Olivia Lee"]
 diseases = ["diabetes", "hypertension", "asthma", "cancer", "flu", "pneumonia", "migraine", "arthritis"]
 specializations = ["Cardiology", "Neurology", "Pediatrics", "Orthopedics", "Oncology", "Endocrinology", "Pulmonology"]
 locations = ["New York", "California", "Texas", "Florida", "Illinois", "Ohio"]
 statuses = ["scheduled", "completed", "cancelled"]
 
-# Generate random dates
 def random_date(start_year=2015, end_year=2025):
     start = datetime(start_year, 1, 1)
     end = datetime(end_year, 12, 31)
@@ -18,20 +16,14 @@ def random_date(start_year=2015, end_year=2025):
     random_days = random.randint(0, delta.days)
     return (start + timedelta(days=random_days)).strftime("%Y-%m-%dT00:00:00Z")
 
-# Function to properly format GraphQL queries 
 def format_query(query_template, values):
-    # First replace all placeholders with their values
     formatted_query = query_template.format(**values)
     
-    # Replace escaped quotes with clean quotes
-    # This regex finds \" and replaces it with just "
     formatted_query = re.sub(r'\\"', '"', formatted_query)
     
     return formatted_query
 
-# Query templates with placeholders
 query_templates = [
-    # Existing templates
     (
         "Find all patients diagnosed with {disease} and their doctors.",
         'query {{ medical_records(where: {{ diagnosis: {{ _ilike: "%{disease}%" }} }}) {{ id diagnosis patient {{ id name age }} doctor {{ id name specialization }} }} }}'
@@ -56,7 +48,6 @@ query_templates = [
         "List the top {limit} doctors with the most medical records.",
         "query {{ doctors(order_by: [{{ medical_records_aggregate: {{ count: desc }} }}], limit: {limit}) {{ id name specialization }} }}"
     ),
-    # New templates
     (
         "List hospitals in {location} with doctors specializing in {specialization}.",
         'query {{ hospitals(where: {{ location: {{ _eq: "{location}" }} }}) {{ id name location doctors(where: {{ specialization: {{ _eq: "{specialization}" }} }}) {{ id name specialization }} }} }}'
@@ -89,7 +80,6 @@ query_templates = [
         "List patients with appointments scheduled with doctors specializing in {specialization}.",
         'query {{ appointments(where: {{ doctor: {{ specialization: {{ _eq: "{specialization}" }} }} }}) {{ id patient {{ id name age }} doctor {{ name specialization }} appointment_date }} }}'
     ),
-    # New templates to be added
     (
         "Find all doctors who treated patients with {disease} in the past year.",
         'query {{ medical_records(where: {{ diagnosis: {{ _ilike: "%{disease}%" }}, created_at: {{ _gt: "2024-01-01T00:00:00Z" }} }}) {{ doctor {{ id name specialization hospital {{ name }} }} }} }}'
@@ -132,11 +122,9 @@ query_templates = [
     )
 ]
 
-# Custom JSON encoder to handle the escaping correctly
 class CustomJSONEncoder(json.JSONEncoder):
     def encode(self, obj):
         result = super().encode(obj)
-        # Replace double-escaped quotes with single-escaped quotes
         return result.replace('\\\\"', '\\"','\'','/')
 
 def generate_training_data(num_samples=500):
@@ -145,7 +133,6 @@ def generate_training_data(num_samples=500):
     for _ in range(num_samples):
         template = random.choice(query_templates)
         
-        # Generate values for all placeholders
         name = random.choice(names)
         disease = random.choice(diseases)
         years = random.randint(1, 30)
@@ -158,7 +145,6 @@ def generate_training_data(num_samples=500):
         age = random.randint(18, 90)
         status = random.choice(statuses)
         
-        # Create a dictionary of all values for formatting
         values = {
             "name": name,
             "disease": disease,
@@ -173,30 +159,21 @@ def generate_training_data(num_samples=500):
             "status": status
         }
         
-        # Format the prompt normally
         prompt = template[0].format(**values)
         
-        # Use a custom approach to write the correct GraphQL query with quotes
         query_template = template[1]
         formatted_query = query_template.format(**values)
         
-        # Add to training data
         training_data.append({"prompt": prompt, "query": formatted_query})
     
-    # Custom approach to write the JSONL file
     with open("training_data.jsonl", "w") as f:
         for item in training_data:
-            # Directly construct the JSON with proper escaping
             prompt_json = json.dumps(item["prompt"])
-            # For the query, ensure quotes don't get double-escaped
             query_str = item["query"]
-            # Replace any double quotes with single escaped quotes
             query_json = json.dumps(query_str)
             
-            # Write the complete JSON line
             f.write(f'{{"prompt": {prompt_json}, "query": {query_json}}}' + "\n")
     
     print(f"Generated {num_samples} training samples in training_data.jsonl")
 
-# Generate 500 samples
 generate_training_data(5000)
