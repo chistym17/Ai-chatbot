@@ -34,25 +34,31 @@ export default function ChatWidget({ isOpen, onClose }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_NGROK_URL}/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: inputValue }),
+        body: JSON.stringify({ prompt: inputValue }),
       });
-
+      
       const data = await response.json();
+      console.log(data)
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       setMessages(prev => [...prev, {
         type: 'bot',
-        content: data.response
+        content: data.result
       }]);
     } catch (error) {
       setMessages(prev => [...prev, {
         type: 'bot',
         content: "Sorry, I couldn't process your request. Please try again."
       }]);
+      console.error('Error:', error);
     } finally {
       setIsLoading(false);
     }
